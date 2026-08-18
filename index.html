@@ -411,6 +411,23 @@
     return taken;
   }
 
+  // The very first row 2 pattern must never leave the player with zero legal
+  // moves before they've had a chance to act, so it's regenerated until the
+  // front is open or a diagonal escape exists (a forced fallback guarantees
+  // this terminates even in pathological luck).
+  function safeStartingFrontRow(col) {
+    for (let attempt = 0; attempt < 30; attempt++) {
+      const pattern = genRowPattern(0);
+      const front = pattern[col];
+      const canLeft = col > 0 && pattern[col - 1];
+      const canRight = col < COLS - 1 && pattern[col + 1];
+      if (!front || canLeft || canRight) return pattern;
+    }
+    const pattern = genRowPattern(0);
+    pattern[col] = false;
+    return pattern;
+  }
+
   function init() {
     playerCol = 2;
     score = 0;
@@ -420,7 +437,8 @@
     best = Number(localStorage.getItem(BEST_KEY) || 0);
     grid = new Array(TOP_ROW + 1);
     grid[PLAYER_ROW] = new Array(COLS).fill(false);
-    for (let r = FRONT_ROW; r <= TOP_ROW; r++) grid[r] = genRowPattern(0);
+    grid[FRONT_ROW] = safeStartingFrontRow(playerCol);
+    for (let r = FRONT_ROW + 1; r <= TOP_ROW; r++) grid[r] = genRowPattern(0);
     overlayEl.classList.remove('show');
     timerBoxEl.classList.remove('low-time');
     clearInterval(timerHandle);
