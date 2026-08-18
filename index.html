@@ -298,12 +298,216 @@
     cursor: pointer;
   }
 
+  .title-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 16px;
+    overflow-y: auto;
+  }
+  .title-screen.hidden { display: none; }
+  .title-card {
+    max-width: 440px;
+    width: 100%;
+    background: var(--surface);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 30px 26px;
+    text-align: center;
+  }
+  .title-name {
+    font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
+    font-weight: 700;
+    font-size: clamp(30px, 8vw, 42px);
+    margin: 0 0 4px;
+    text-wrap: balance;
+  }
+  .title-tagline {
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    margin: 0 0 20px;
+  }
+
+  .howto {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 0 0 20px;
+  }
+  .howto-step {
+    flex: 1 1 140px;
+    max-width: 170px;
+  }
+  .howto-step p {
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.45;
+    margin: 0;
+  }
+  .howto-badge {
+    display: block;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    color: var(--accent);
+    margin-bottom: 5px;
+  }
+  .howto-badge.danger { color: var(--danger); }
+
+  .mini-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    width: 84px;
+    height: 56px;
+    gap: 2px;
+    margin: 0 auto 10px;
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .mini-cell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .mini-cell.light { background: var(--board-light); }
+  .mini-cell.dark { background: var(--board-dark); }
+  .mini-cell.legal::after,
+  .mini-cell.blocked::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.35;
+  }
+  .mini-cell.legal::after { background: var(--accent); }
+  .mini-cell.blocked::after { background: var(--danger); }
+  .mini-piece {
+    position: relative;
+    z-index: 1;
+    font-size: 19px;
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
+  }
+  .mini-piece.player { color: #f4f1e6; }
+  .mini-piece.enemy { color: #201a14; }
+
+  .title-rules {
+    list-style: none;
+    text-align: left;
+    padding: 0;
+    margin: 0 0 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .title-rules li {
+    position: relative;
+    padding-left: 1.1em;
+    font-size: 13px;
+    color: var(--ink);
+  }
+  .title-rules li::before {
+    content: "·";
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .title-rules strong { font-weight: 700; }
+  .rule-time-up {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 700;
+    font-size: 11px;
+    color: var(--accent);
+  }
+
+  #startBtn {
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 12px 34px;
+    border-radius: 10px;
+    border: none;
+    background: var(--accent);
+    color: var(--accent-ink);
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: transform 0.08s ease;
+  }
+  #startBtn:hover { transform: translateY(-1px); }
+  #startBtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .title-hint {
+    margin: 12px 0 0;
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    .piece, button.action, .overlay, .stamp, .cell.zone::after, .readout.low-time .value { transition: none !important; animation: none !important; }
+    .piece, button.action, .overlay, .stamp, .cell.zone::after, .readout.low-time .value, #startBtn { transition: none !important; animation: none !important; }
   }
 </style>
 </head>
 <body>
+<div class="title-screen" id="titleScreen">
+  <div class="title-card">
+    <h1 class="title-name">RunPawn</h1>
+    <p class="title-tagline">체스 폰, 홀로 라인을 지킨다</p>
+
+    <div class="howto">
+      <div class="howto-step">
+        <div class="mini-board">
+          <div class="mini-cell light"></div>
+          <div class="mini-cell dark"></div>
+          <div class="mini-cell light"></div>
+          <div class="mini-cell dark"></div>
+          <div class="mini-cell light"><span class="mini-piece player">♙</span></div>
+          <div class="mini-cell dark"></div>
+        </div>
+        <p><span class="howto-badge">↑ 전진</span>정면이 비어 있으면 앞으로 이동합니다</p>
+      </div>
+
+      <div class="howto-step">
+        <div class="mini-board">
+          <div class="mini-cell dark legal"><span class="mini-piece enemy">♟</span></div>
+          <div class="mini-cell light"></div>
+          <div class="mini-cell dark"></div>
+          <div class="mini-cell light"></div>
+          <div class="mini-cell dark"><span class="mini-piece player">♙</span></div>
+          <div class="mini-cell light"></div>
+        </div>
+        <p><span class="howto-badge">↙ 포획</span>대각선에 적이 있으면 잡으며 그 칸으로 이동합니다</p>
+      </div>
+
+      <div class="howto-step">
+        <div class="mini-board">
+          <div class="mini-cell light"></div>
+          <div class="mini-cell dark blocked"><span class="mini-piece enemy">♟</span></div>
+          <div class="mini-cell light"></div>
+          <div class="mini-cell dark"></div>
+          <div class="mini-cell light"><span class="mini-piece player">♙</span></div>
+          <div class="mini-cell dark"></div>
+        </div>
+        <p><span class="howto-badge danger">✕ 패배</span>정면이 막히고 대각선도 비어 있으면 게임 종료</p>
+      </div>
+    </div>
+
+    <ul class="title-rules">
+      <li>제한시간 <strong>3분</strong> — 시간 종료 시 생존 성공(<span class="rule-time-up">TIME UP</span>)</li>
+      <li>포획 성공 시 <strong>+10점</strong>, 최고 점수는 자동 저장됩니다</li>
+      <li>시작 후 <strong>4턴</strong> 동안은 막히지 않도록 보호됩니다</li>
+    </ul>
+
+    <button id="startBtn">게임 시작</button>
+    <p class="title-hint">방향키 또는 버튼으로 조작 · Enter로 시작</p>
+  </div>
+</div>
 <div class="table">
   <div class="plaque">
     <h1>RunPawn</h1>
@@ -376,10 +580,13 @@
   const btnForward = document.getElementById('btnForward');
   const btnRight = document.getElementById('btnRight');
   const restartBtn = document.getElementById('restartBtn');
+  const titleScreenEl = document.getElementById('titleScreen');
+  const startBtn = document.getElementById('startBtn');
 
   const BEST_KEY = 'runpawn_best_score';
+  const GRACE_TURNS = 4;
 
-  let playerCol, grid, score, turn, gameOver, best, timeLeft, timerHandle;
+  let playerCol, grid, score, turn, gameOver, best, timeLeft, timerHandle, started;
 
   function levelOf(s) {
     return Math.min(6, Math.floor(s / 20));
@@ -411,39 +618,46 @@
     return taken;
   }
 
-  // The very first row 2 pattern must never leave the player with zero legal
-  // moves before they've had a chance to act, so it's regenerated until the
-  // front is open or a diagonal escape exists (a forced fallback guarantees
-  // this terminates even in pathological luck).
-  function safeStartingFrontRow(col) {
-    for (let attempt = 0; attempt < 30; attempt++) {
-      const pattern = genRowPattern(0);
-      const front = pattern[col];
-      const canLeft = col > 0 && pattern[col - 1];
-      const canRight = col < COLS - 1 && pattern[col + 1];
-      if (!front || canLeft || canRight) return pattern;
-    }
-    const pattern = genRowPattern(0);
-    pattern[col] = false;
-    return pattern;
+  // If the front is blocked with no diagonal escape, grant one instead of
+  // silently deleting the blocker - the row still reads as full, the threat
+  // stays visible, but the player is never left with zero legal moves. Used
+  // for the very first board and for the first GRACE_TURNS moves after that,
+  // so a run can never end before the player has had a real chance to react.
+  function ensureSafeFront() {
+    const front = grid[FRONT_ROW][playerCol];
+    if (!front) return;
+    const canLeft = playerCol > 0 && grid[FRONT_ROW][playerCol - 1];
+    const canRight = playerCol < COLS - 1 && grid[FRONT_ROW][playerCol + 1];
+    if (canLeft || canRight) return;
+    const options = [];
+    if (playerCol > 0) options.push(playerCol - 1);
+    if (playerCol < COLS - 1) options.push(playerCol + 1);
+    const pick = options[Math.floor(Math.random() * options.length)];
+    grid[FRONT_ROW][pick] = true;
   }
 
-  function init() {
+  function setupBoard() {
     playerCol = 2;
     score = 0;
     turn = 0;
     gameOver = false;
+    started = false;
     timeLeft = TIME_LIMIT;
     best = Number(localStorage.getItem(BEST_KEY) || 0);
     grid = new Array(TOP_ROW + 1);
     grid[PLAYER_ROW] = new Array(COLS).fill(false);
-    grid[FRONT_ROW] = safeStartingFrontRow(playerCol);
-    for (let r = FRONT_ROW + 1; r <= TOP_ROW; r++) grid[r] = genRowPattern(0);
+    for (let r = FRONT_ROW; r <= TOP_ROW; r++) grid[r] = genRowPattern(0);
+    ensureSafeFront();
     overlayEl.classList.remove('show');
     timerBoxEl.classList.remove('low-time');
     clearInterval(timerHandle);
-    timerHandle = setInterval(tick, 1000);
     render();
+  }
+
+  function beginRun() {
+    started = true;
+    clearInterval(timerHandle);
+    timerHandle = setInterval(tick, 1000);
   }
 
   function tick() {
@@ -482,7 +696,7 @@
   }
 
   function act(action) {
-    if (gameOver) return;
+    if (!started || gameOver) return;
     const L = legal();
     if (action === 'forward' && !L.canForward) return;
     if (action === 'left' && !L.canLeft) return;
@@ -500,6 +714,7 @@
 
     turn += 1;
     shiftAndSpawn();
+    if (turn <= GRACE_TURNS) ensureSafeFront();
 
     const after = legal();
     if (after.over) endGame('blocked');
@@ -547,7 +762,7 @@
     }
 
     const L = legal();
-    if (L.over && !gameOver) endGame('blocked');
+    if (started && L.over && !gameOver) endGame('blocked');
     btnForward.disabled = gameOver || !L.canForward;
     btnLeft.disabled = gameOver || !L.canLeft;
     btnRight.disabled = gameOver || !L.canRight;
@@ -561,19 +776,35 @@
     }
   }
 
+  function dismissTitle() {
+    titleScreenEl.classList.add('hidden');
+    beginRun();
+  }
+
+  function restart() {
+    setupBoard();
+    beginRun();
+  }
+
   btnLeft.addEventListener('click', () => act('left'));
   btnForward.addEventListener('click', () => act('forward'));
   btnRight.addEventListener('click', () => act('right'));
-  restartBtn.addEventListener('click', init);
+  restartBtn.addEventListener('click', restart);
+  startBtn.addEventListener('click', dismissTitle);
 
   window.addEventListener('keydown', (e) => {
-    if (gameOver && (e.key === 'Enter' || e.key === ' ')) { init(); return; }
+    const titleShowing = !titleScreenEl.classList.contains('hidden');
+    if (titleShowing) {
+      if (e.key === 'Enter' || e.key === ' ') dismissTitle();
+      return;
+    }
+    if (gameOver && (e.key === 'Enter' || e.key === ' ')) { restart(); return; }
     if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') act('forward');
     else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') act('left');
     else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') act('right');
   });
 
-  init();
+  setupBoard();
 })();
 </script>
 </body>
