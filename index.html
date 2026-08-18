@@ -153,18 +153,11 @@
     border-radius: 6px;
     overflow: hidden;
   }
-  .board.advance { animation: board-advance 0.24s ease; }
-  @keyframes board-advance {
-    0% { transform: translateY(0); }
-    45% { transform: translateY(6%); }
-    100% { transform: translateY(0); }
-  }
   .cell {
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.22s ease;
   }
   .cell.light { background: var(--board-light); }
   .cell.dark { background: var(--board-dark); }
@@ -462,7 +455,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .piece, button.action, .overlay, .stamp, .cell.zone::after, .readout.low-time .value, #startBtn, .cell, .board.advance { transition: none !important; animation: none !important; }
+    .piece, button.action, .overlay, .stamp, .cell.zone::after, .readout.low-time .value, #startBtn { transition: none !important; animation: none !important; }
   }
 </style>
 </head>
@@ -598,7 +591,7 @@
   const BEST_KEY = 'pawnrun_best_score';
   const GRACE_TURNS = 4;
 
-  let playerCol, grid, score, turn, gameOver, best, timeLeft, timerHandle, started, scrollOffset;
+  let playerCol, grid, score, turn, gameOver, best, timeLeft, timerHandle, started;
 
   function levelOf(s) {
     return Math.min(6, Math.floor(s / 20));
@@ -652,7 +645,6 @@
     playerCol = 2;
     score = 0;
     turn = 0;
-    scrollOffset = 0;
     gameOver = false;
     started = false;
     timeLeft = TIME_LIMIT;
@@ -706,7 +698,6 @@
   function shiftAndSpawn() {
     for (let r = PLAYER_ROW; r < TOP_ROW; r++) grid[r] = grid[r + 1];
     grid[TOP_ROW] = genRowPattern(levelOf(score));
-    scrollOffset += 1; // flips the checkerboard parity so the floor itself reads as advancing, not just the enemies
   }
 
   function act(action) {
@@ -733,13 +724,6 @@
     const after = legal();
     if (after.over) endGame('blocked');
     render();
-    pulseBoard();
-  }
-
-  function pulseBoard() {
-    boardEl.classList.remove('advance');
-    void boardEl.offsetWidth; // force reflow so the animation restarts every turn
-    boardEl.classList.add('advance');
   }
 
   function render() {
@@ -755,7 +739,7 @@
     for (let r = TOP_ROW; r >= PLAYER_ROW; r--) {
       for (let c = 0; c < COLS; c++) {
         const cell = document.createElement('div');
-        const isLight = (r + c + scrollOffset) % 2 === 0;
+        const isLight = (r + c) % 2 === 0;
         cell.className = 'cell ' + (isLight ? 'light' : 'dark');
 
         if (r === FRONT_ROW) {
