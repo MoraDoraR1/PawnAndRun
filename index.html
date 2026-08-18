@@ -153,12 +153,6 @@
     border-radius: 6px;
     overflow: hidden;
   }
-  .board.advance { animation: board-advance 0.24s ease; }
-  @keyframes board-advance {
-    0% { transform: translateY(0); }
-    45% { transform: translateY(6%); }
-    100% { transform: translateY(0); }
-  }
   .cell {
     position: relative;
     display: flex;
@@ -462,7 +456,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .piece, button.action, .overlay, .stamp, .cell.zone::after, .readout.low-time .value, #startBtn, .cell, .board.advance { transition: none !important; animation: none !important; }
+    .piece, button.action, .overlay, .stamp, .cell.zone::after, .readout.low-time .value, #startBtn, .cell { transition: none !important; animation: none !important; }
   }
 </style>
 </head>
@@ -733,13 +727,6 @@
     const after = legal();
     if (after.over) endGame('blocked');
     render();
-    pulseBoard();
-  }
-
-  function pulseBoard() {
-    boardEl.classList.remove('advance');
-    void boardEl.offsetWidth; // force reflow so the animation restarts every turn
-    boardEl.classList.add('advance');
   }
 
   function render() {
