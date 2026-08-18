@@ -797,7 +797,12 @@
   restartBtn.addEventListener('click', restart);
   startBtn.addEventListener('click', dismissTitle);
 
+  const HANDLED_KEYS = ['ArrowUp', 'ArrowLeft', 'ArrowRight', 'w', 'W', 'a', 'A', 'd', 'D', 'Enter', ' '];
+
   window.addEventListener('keydown', (e) => {
+    if (!HANDLED_KEYS.includes(e.key)) return;
+    e.preventDefault(); // stop the browser's default arrow-key/space page scroll
+
     const titleShowing = !titleScreenEl.classList.contains('hidden');
     if (titleShowing) {
       if (e.key === 'Enter' || e.key === ' ') dismissTitle();
