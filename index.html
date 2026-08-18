@@ -547,6 +547,7 @@
     }
 
     const L = legal();
+    if (L.over && !gameOver) endGame('blocked');
     btnForward.disabled = gameOver || !L.canForward;
     btnLeft.disabled = gameOver || !L.canLeft;
     btnRight.disabled = gameOver || !L.canRight;
