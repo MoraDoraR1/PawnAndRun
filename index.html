@@ -96,11 +96,11 @@
   }
 
   .status-row {
-    display: flex;
-    gap: 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
   }
   .readout {
-    flex: 1;
     background: var(--surface);
     border-radius: 10px;
     box-shadow: var(--shadow);
@@ -120,6 +120,15 @@
     font-variant-numeric: tabular-nums;
     font-size: 22px;
     font-weight: 600;
+    transition: color 0.2s ease;
+  }
+  .readout.low-time .value {
+    color: var(--danger);
+    animation: pulse 1s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
   }
 
   .board-frame {
@@ -267,6 +276,10 @@
     display: inline-block;
     border-radius: 4px;
   }
+  .stamp h2.time-up {
+    border-color: var(--accent);
+    color: #f4d9ae;
+  }
   .stamp .final-score {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 15px;
@@ -286,7 +299,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .piece, button.action, .overlay, .stamp, .cell.zone::after { transition: none !important; animation: none !important; }
+    .piece, button.action, .overlay, .stamp, .cell.zone::after, .readout.low-time .value { transition: none !important; animation: none !important; }
   }
 </style>
 </head>
@@ -302,6 +315,10 @@
       <span class="label">점수</span>
       <span class="value" id="score">0</span>
     </div>
+    <div class="readout" id="timerBox">
+      <span class="label">남은 시간</span>
+      <span class="value" id="timer">3:00</span>
+    </div>
     <div class="readout">
       <span class="label">최고 점수</span>
       <span class="value" id="best">0</span>
@@ -316,7 +333,7 @@
     <div class="board" id="board" aria-label="7행 5열 게임 보드"></div>
     <div class="overlay" id="overlay">
       <div class="stamp">
-        <h2>GAME OVER</h2>
+        <h2 id="stampTitle">GAME OVER</h2>
         <div class="final-score">최종 점수 <span id="finalScore">0</span></div>
         <button id="restartBtn">다시 시작</button>
       </div>
@@ -344,12 +361,16 @@
   const TOP_ROW = 7;
   const PLAYER_ROW = 1;
   const FRONT_ROW = 2;
+  const TIME_LIMIT = 180;
 
   const boardEl = document.getElementById('board');
   const scoreEl = document.getElementById('score');
   const bestEl = document.getElementById('best');
   const turnEl = document.getElementById('turn');
+  const timerEl = document.getElementById('timer');
+  const timerBoxEl = document.getElementById('timerBox');
   const overlayEl = document.getElementById('overlay');
+  const stampTitleEl = document.getElementById('stampTitle');
   const finalScoreEl = document.getElementById('finalScore');
   const btnLeft = document.getElementById('btnLeft');
   const btnForward = document.getElementById('btnForward');
@@ -358,7 +379,7 @@
 
   const BEST_KEY = 'runpawn_best_score';
 
-  let playerCol, grid, score, turn, gameOver, best;
+  let playerCol, grid, score, turn, gameOver, best, timeLeft, timerHandle;
 
   function levelOf(s) {
     return Math.min(6, Math.floor(s / 20));
@@ -395,12 +416,37 @@
     score = 0;
     turn = 0;
     gameOver = false;
+    timeLeft = TIME_LIMIT;
     best = Number(localStorage.getItem(BEST_KEY) || 0);
     grid = new Array(TOP_ROW + 1);
     grid[PLAYER_ROW] = new Array(COLS).fill(false);
     for (let r = FRONT_ROW; r <= TOP_ROW; r++) grid[r] = genRowPattern(0);
     overlayEl.classList.remove('show');
+    timerBoxEl.classList.remove('low-time');
+    clearInterval(timerHandle);
+    timerHandle = setInterval(tick, 1000);
     render();
+  }
+
+  function tick() {
+    if (gameOver) { clearInterval(timerHandle); return; }
+    timeLeft -= 1;
+    if (timeLeft <= 0) {
+      timeLeft = 0;
+      endGame('time');
+    }
+    render();
+  }
+
+  function endGame(reason) {
+    gameOver = true;
+    clearInterval(timerHandle);
+    if (score > best) {
+      best = score;
+      localStorage.setItem(BEST_KEY, String(best));
+    }
+    stampTitleEl.textContent = reason === 'time' ? 'TIME UP' : 'GAME OVER';
+    stampTitleEl.classList.toggle('time-up', reason === 'time');
   }
 
   function legal() {
@@ -438,13 +484,7 @@
     shiftAndSpawn();
 
     const after = legal();
-    if (after.over) {
-      gameOver = true;
-      if (score > best) {
-        best = score;
-        localStorage.setItem(BEST_KEY, String(best));
-      }
-    }
+    if (after.over) endGame('blocked');
     render();
   }
 
@@ -452,6 +492,10 @@
     scoreEl.textContent = score;
     bestEl.textContent = best;
     turnEl.textContent = turn;
+    const m = Math.floor(timeLeft / 60);
+    const s = timeLeft % 60;
+    timerEl.textContent = m + ':' + String(s).padStart(2, '0');
+    timerBoxEl.classList.toggle('low-time', timeLeft <= 10 && timeLeft > 0);
 
     boardEl.innerHTML = '';
     for (let r = TOP_ROW; r >= PLAYER_ROW; r--) {
