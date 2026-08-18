@@ -175,24 +175,35 @@
   .piece {
     position: relative;
     z-index: 2;
-    font-size: min(9vw, 40px);
-    line-height: 1;
+    display: flex;
     filter: drop-shadow(0 2px 1px rgba(0,0,0,0.35));
-    transition: transform 0.18s ease;
   }
-  .piece.player { color: #f4f1e6; text-shadow: 0 0 0 #f4f1e6; }
-  .piece.enemy { color: #201a14; text-shadow: 0 0 0 #201a14; }
+  .piece-svg {
+    display: block;
+    width: min(8.2vw, 34px);
+    height: auto;
+    overflow: visible;
+  }
+  .piece-svg path, .piece-svg rect {
+    stroke-width: 1.6px;
+    stroke-linejoin: round;
+    paint-order: stroke;
+  }
+  /* Every piece gets an outline in the opposite tone from its fill, so it
+     stays legible whether it lands on a light or a dark square. */
+  .piece.player .piece-svg { fill: #f5f0e3; stroke: #33281c; }
+  .piece.enemy .piece-svg { fill: #221a12; stroke: #f5efe0; }
   .piece.enter { animation: drop 0.2s ease; }
   @keyframes drop {
     from { transform: translateY(-14%); opacity: 0.5; }
     to { transform: translateY(0); opacity: 1; }
   }
   .piece.captured {
-    animation: pop 0.22s ease forwards;
+    animation: pop 0.18s ease forwards;
   }
   @keyframes pop {
     0% { transform: scale(1); opacity: 1; }
-    100% { transform: scale(1.6); opacity: 0; }
+    100% { transform: scale(1.5); opacity: 0; }
   }
 
   .controls {
@@ -396,11 +407,21 @@
   .mini-piece {
     position: relative;
     z-index: 1;
-    font-size: 19px;
+    display: flex;
     filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
   }
-  .mini-piece.player { color: #f4f1e6; }
-  .mini-piece.enemy { color: #201a14; }
+  .mini-piece svg {
+    display: block;
+    width: 20px;
+    height: auto;
+  }
+  .mini-piece svg path, .mini-piece svg rect {
+    stroke-width: 1.6px;
+    stroke-linejoin: round;
+    paint-order: stroke;
+  }
+  .mini-piece.player svg { fill: #f5f0e3; stroke: #33281c; }
+  .mini-piece.enemy svg { fill: #221a12; stroke: #f5efe0; }
 
   .title-rules {
     list-style: none;
@@ -472,7 +493,7 @@
           <div class="mini-cell dark"></div>
           <div class="mini-cell light"></div>
           <div class="mini-cell dark"></div>
-          <div class="mini-cell light"><span class="mini-piece player">♙</span></div>
+          <div class="mini-cell light"><span class="mini-piece player"><svg viewBox="0 0 24 28" aria-hidden="true"><path d="M12 3.6a4.4 4.4 0 0 1 2.23 8.18c1.02.58 1.9 1.46 2.6 2.6 1.34 2.2 2.1 5.02 2.27 7.98H4.9c.17-2.96.93-5.78 2.27-7.98.7-1.14 1.58-2.02 2.6-2.6A4.4 4.4 0 0 1 12 3.6Z"/><rect x="4.4" y="23.2" width="15.2" height="3.4" rx="1.5"/></svg></span></div>
           <div class="mini-cell dark"></div>
         </div>
         <p><span class="howto-badge">↑ 전진</span>정면이 비어 있으면 앞으로 이동합니다</p>
@@ -480,11 +501,11 @@
 
       <div class="howto-step">
         <div class="mini-board">
-          <div class="mini-cell dark legal"><span class="mini-piece enemy">♟</span></div>
+          <div class="mini-cell dark legal"><span class="mini-piece enemy"><svg viewBox="0 0 24 28" aria-hidden="true"><path d="M12 3.6a4.4 4.4 0 0 1 2.23 8.18c1.02.58 1.9 1.46 2.6 2.6 1.34 2.2 2.1 5.02 2.27 7.98H4.9c.17-2.96.93-5.78 2.27-7.98.7-1.14 1.58-2.02 2.6-2.6A4.4 4.4 0 0 1 12 3.6Z"/><rect x="4.4" y="23.2" width="15.2" height="3.4" rx="1.5"/></svg></span></div>
           <div class="mini-cell light"></div>
           <div class="mini-cell dark"></div>
           <div class="mini-cell light"></div>
-          <div class="mini-cell dark"><span class="mini-piece player">♙</span></div>
+          <div class="mini-cell dark"><span class="mini-piece player"><svg viewBox="0 0 24 28" aria-hidden="true"><path d="M12 3.6a4.4 4.4 0 0 1 2.23 8.18c1.02.58 1.9 1.46 2.6 2.6 1.34 2.2 2.1 5.02 2.27 7.98H4.9c.17-2.96.93-5.78 2.27-7.98.7-1.14 1.58-2.02 2.6-2.6A4.4 4.4 0 0 1 12 3.6Z"/><rect x="4.4" y="23.2" width="15.2" height="3.4" rx="1.5"/></svg></span></div>
           <div class="mini-cell light"></div>
         </div>
         <p><span class="howto-badge">↖ 포획</span>대각선에 적이 있으면 잡으며 그 칸으로 이동합니다</p>
@@ -493,10 +514,10 @@
       <div class="howto-step">
         <div class="mini-board">
           <div class="mini-cell light"></div>
-          <div class="mini-cell dark blocked"><span class="mini-piece enemy">♟</span></div>
+          <div class="mini-cell dark blocked"><span class="mini-piece enemy"><svg viewBox="0 0 24 28" aria-hidden="true"><path d="M12 3.6a4.4 4.4 0 0 1 2.23 8.18c1.02.58 1.9 1.46 2.6 2.6 1.34 2.2 2.1 5.02 2.27 7.98H4.9c.17-2.96.93-5.78 2.27-7.98.7-1.14 1.58-2.02 2.6-2.6A4.4 4.4 0 0 1 12 3.6Z"/><rect x="4.4" y="23.2" width="15.2" height="3.4" rx="1.5"/></svg></span></div>
           <div class="mini-cell light"></div>
           <div class="mini-cell dark"></div>
-          <div class="mini-cell light"><span class="mini-piece player">♙</span></div>
+          <div class="mini-cell light"><span class="mini-piece player"><svg viewBox="0 0 24 28" aria-hidden="true"><path d="M12 3.6a4.4 4.4 0 0 1 2.23 8.18c1.02.58 1.9 1.46 2.6 2.6 1.34 2.2 2.1 5.02 2.27 7.98H4.9c.17-2.96.93-5.78 2.27-7.98.7-1.14 1.58-2.02 2.6-2.6A4.4 4.4 0 0 1 12 3.6Z"/><rect x="4.4" y="23.2" width="15.2" height="3.4" rx="1.5"/></svg></span></div>
           <div class="mini-cell dark"></div>
         </div>
         <p><span class="howto-badge danger">✕ 패배</span>정면이 막히고 대각선도 비어 있으면 게임 종료</p>
@@ -590,8 +611,14 @@
 
   const BEST_KEY = 'pawnrun_best_score';
   const GRACE_TURNS = 4;
+  const CAPTURE_DELAY_MS = 180;
+  const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  let playerCol, grid, score, turn, gameOver, best, timeLeft, timerHandle, started;
+  const PAWN_SVG = '<svg class="piece-svg" viewBox="0 0 24 28" aria-hidden="true">' +
+    '<path d="M12 3.6a4.4 4.4 0 0 1 2.23 8.18c1.02.58 1.9 1.46 2.6 2.6 1.34 2.2 2.1 5.02 2.27 7.98H4.9c.17-2.96.93-5.78 2.27-7.98.7-1.14 1.58-2.02 2.6-2.6A4.4 4.4 0 0 1 12 3.6Z"/>' +
+    '<rect x="4.4" y="23.2" width="15.2" height="3.4" rx="1.5"/></svg>';
+
+  let playerCol, grid, score, turn, gameOver, best, timeLeft, timerHandle, started, isAnimating;
 
   function levelOf(s) {
     return Math.min(6, Math.floor(s / 20));
@@ -647,6 +674,7 @@
     turn = 0;
     gameOver = false;
     started = false;
+    isAnimating = false;
     timeLeft = TIME_LIMIT;
     best = Number(localStorage.getItem(BEST_KEY) || 0);
     grid = new Array(TOP_ROW + 1);
@@ -665,14 +693,26 @@
     timerHandle = setInterval(tick, 1000);
   }
 
+  function updateTimerDisplay() {
+    const m = Math.floor(timeLeft / 60);
+    const s = timeLeft % 60;
+    timerEl.textContent = m + ':' + String(s).padStart(2, '0');
+    timerBoxEl.classList.toggle('low-time', timeLeft <= 10 && timeLeft > 0);
+  }
+
+  // Only updates the clock digits, not the board - a full render() rebuilds
+  // every cell from scratch, which would replay every enemy's drop-in
+  // animation once a second even when nothing actually moved.
   function tick() {
     if (gameOver) { clearInterval(timerHandle); return; }
     timeLeft -= 1;
     if (timeLeft <= 0) {
       timeLeft = 0;
       endGame('time');
+      render();
+      return;
     }
-    render();
+    updateTimerDisplay();
   }
 
   function endGame(reason) {
@@ -701,12 +741,32 @@
   }
 
   function act(action) {
-    if (!started || gameOver) return;
+    if (!started || gameOver || isAnimating) return;
     const L = legal();
     if (action === 'forward' && !L.canForward) return;
     if (action === 'left' && !L.canLeft) return;
     if (action === 'right' && !L.canRight) return;
 
+    if (action !== 'forward' && !REDUCED_MOTION) {
+      flashCapture(action === 'left' ? playerCol - 1 : playerCol + 1);
+      isAnimating = true;
+      setTimeout(() => { isAnimating = false; resolveAction(action); }, CAPTURE_DELAY_MS);
+    } else {
+      resolveAction(action);
+    }
+  }
+
+  // Pops the about-to-be-captured piece on the DOM as it stands from the
+  // last render, before any state changes - a quick beat of visual feedback
+  // for the capture rather than it just silently vanishing next render.
+  function flashCapture(col) {
+    const idx = (TOP_ROW - FRONT_ROW) * COLS + col;
+    const cellEl = boardEl.children[idx];
+    const pieceEl = cellEl && cellEl.querySelector('.piece.enemy');
+    if (pieceEl) pieceEl.classList.add('captured');
+  }
+
+  function resolveAction(action) {
     if (action === 'left') {
       score += 10;
       grid[FRONT_ROW][playerCol - 1] = false;
@@ -730,10 +790,7 @@
     scoreEl.textContent = score;
     bestEl.textContent = best;
     turnEl.textContent = turn;
-    const m = Math.floor(timeLeft / 60);
-    const s = timeLeft % 60;
-    timerEl.textContent = m + ':' + String(s).padStart(2, '0');
-    timerBoxEl.classList.toggle('low-time', timeLeft <= 10 && timeLeft > 0);
+    updateTimerDisplay();
 
     boardEl.innerHTML = '';
     for (let r = TOP_ROW; r >= PLAYER_ROW; r--) {
@@ -754,12 +811,14 @@
         if (r === PLAYER_ROW && c === playerCol) {
           const p = document.createElement('span');
           p.className = 'piece player';
-          p.textContent = '♙';
+          p.innerHTML = PAWN_SVG;
           cell.appendChild(p);
         } else if (grid[r][c]) {
           const p = document.createElement('span');
-          p.className = 'piece enemy enter';
-          p.textContent = '♟';
+          // Only the row that just spawned at the top plays the drop-in
+          // animation - every other enemy is simply still where it was.
+          p.className = 'piece enemy' + (r === TOP_ROW ? ' enter' : '');
+          p.innerHTML = PAWN_SVG;
           cell.appendChild(p);
         }
         boardEl.appendChild(cell);
