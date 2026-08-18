@@ -358,77 +358,69 @@
 
   const BEST_KEY = 'runpawn_best_score';
 
-  let playerCol, enemyRow, score, turn, spawnCooldown, gameOver, best;
+  let playerCol, grid, score, turn, gameOver, best;
+
+  function levelOf(s) {
+    return Math.min(6, Math.floor(s / 20));
+  }
+
+  // Every row-pattern is built from contiguous blocks of width >= 2 - never a
+  // lone occupied column - and always has at least one block, so every row
+  // always holds at least one enemy. Because a pattern's column membership
+  // never changes as it descends (only a capture can remove one cell, and
+  // only during the single turn that pattern sits at row 2), this per-block
+  // rule is exactly what keeps "front blocked + both diagonals empty" from
+  // ever happening, regardless of which column the player is in.
+  function genRowPattern(level) {
+    const taken = new Array(COLS).fill(false);
+    const width3Chance = Math.min(0.65, 0.28 + level * 0.07);
+
+    function placeBlock() {
+      const w = Math.random() < width3Chance ? 3 : 2;
+      const candidates = [];
+      for (let s = 0; s <= COLS - w; s++) {
+        let ok = true;
+        for (let c = s; c < s + w; c++) if (taken[c]) { ok = false; break; }
+        if (ok) candidates.push(s);
+      }
+      if (candidates.length === 0) return false;
+      const s = candidates[Math.floor(Math.random() * candidates.length)];
+      for (let c = s; c < s + w; c++) taken[c] = true;
+      return true;
+    }
+
+    placeBlock();
+    const secondBlockChance = 0.15 + level * 0.09;
+    if (Math.random() < secondBlockChance) placeBlock();
+
+    return taken;
+  }
 
   function init() {
     playerCol = 2;
-    enemyRow = new Array(COLS).fill(null);
     score = 0;
     turn = 0;
-    spawnCooldown = 2;
     gameOver = false;
     best = Number(localStorage.getItem(BEST_KEY) || 0);
+    grid = new Array(TOP_ROW + 1);
+    grid[PLAYER_ROW] = new Array(COLS).fill(false);
+    for (let r = FRONT_ROW; r <= TOP_ROW; r++) grid[r] = genRowPattern(0);
     overlayEl.classList.remove('show');
     render();
   }
 
   function legal() {
-    const front = enemyRow[playerCol] === FRONT_ROW;
+    const front = grid[FRONT_ROW][playerCol];
     const canForward = !front;
-    const canLeft = playerCol > 0 && enemyRow[playerCol - 1] === FRONT_ROW;
-    const canRight = playerCol < COLS - 1 && enemyRow[playerCol + 1] === FRONT_ROW;
+    const canLeft = playerCol > 0 && grid[FRONT_ROW][playerCol - 1];
+    const canRight = playerCol < COLS - 1 && grid[FRONT_ROW][playerCol + 1];
     const over = front && !canLeft && !canRight;
     return { front, canForward, canLeft, canRight, over };
   }
 
-  function descend() {
-    for (let c = 0; c < COLS; c++) {
-      if (enemyRow[c] !== null) {
-        enemyRow[c] -= 1;
-        if (enemyRow[c] < PLAYER_ROW) enemyRow[c] = null;
-      }
-    }
-  }
-
-  // Enemies always spawn as a contiguous, simultaneous cluster (width >= 2).
-  // Because every enemy in a cluster is placed at the same row and descends
-  // in lockstep, whenever one member reaches row 2 a neighbor is guaranteed
-  // to be there too - so a "front blocked + both diagonals empty" dead end
-  // can never occur, regardless of which column the player is in.
-  function trySpawn() {
-    spawnCooldown -= 1;
-    if (spawnCooldown > 0) return;
-
-    const runs = [];
-    let start = null;
-    for (let c = 0; c < COLS; c++) {
-      if (enemyRow[c] === null) {
-        if (start === null) start = c;
-      } else if (start !== null) {
-        runs.push([start, c - 1]);
-        start = null;
-      }
-    }
-    if (start !== null) runs.push([start, COLS - 1]);
-
-    const validRuns = runs.filter(r => r[1] - r[0] + 1 >= 2);
-    if (validRuns.length === 0) {
-      spawnCooldown = 1;
-      return;
-    }
-
-    const run = validRuns[Math.floor(Math.random() * validRuns.length)];
-    const runLen = run[1] - run[0] + 1;
-    const maxWidth = Math.min(3, runLen);
-    const width = maxWidth >= 3 && Math.random() < 0.3 ? 3 : 2;
-    const maxStart = run[1] - width + 1;
-    const startCol = run[0] + Math.floor(Math.random() * (maxStart - run[0] + 1));
-    for (let c = startCol; c < startCol + width; c++) enemyRow[c] = TOP_ROW;
-
-    const level = Math.min(5, Math.floor(score / 30));
-    const min = Math.max(2, 5 - level);
-    const max = Math.max(3, 7 - level);
-    spawnCooldown = min + Math.floor(Math.random() * (max - min + 1));
+  function shiftAndSpawn() {
+    for (let r = PLAYER_ROW; r < TOP_ROW; r++) grid[r] = grid[r + 1];
+    grid[TOP_ROW] = genRowPattern(levelOf(score));
   }
 
   function act(action) {
@@ -440,17 +432,16 @@
 
     if (action === 'left') {
       score += 10;
-      enemyRow[playerCol - 1] = null;
+      grid[FRONT_ROW][playerCol - 1] = false;
       playerCol -= 1;
     } else if (action === 'right') {
       score += 10;
-      enemyRow[playerCol + 1] = null;
+      grid[FRONT_ROW][playerCol + 1] = false;
       playerCol += 1;
     }
 
     turn += 1;
-    descend();
-    trySpawn();
+    shiftAndSpawn();
 
     const after = legal();
     if (after.over) {
@@ -477,9 +468,9 @@
 
         if (r === FRONT_ROW) {
           cell.classList.add('zone');
-          if (c === playerCol && enemyRow[c] === FRONT_ROW) {
+          if (c === playerCol && grid[FRONT_ROW][c]) {
             cell.classList.add('zone-blocked');
-          } else if ((c === playerCol - 1 || c === playerCol + 1) && enemyRow[c] === FRONT_ROW) {
+          } else if ((c === playerCol - 1 || c === playerCol + 1) && grid[FRONT_ROW][c]) {
             cell.classList.add('zone-legal');
           }
         }
@@ -489,7 +480,7 @@
           p.className = 'piece player';
           p.textContent = '♙';
           cell.appendChild(p);
-        } else if (enemyRow[c] === r) {
+        } else if (grid[r][c]) {
           const p = document.createElement('span');
           p.className = 'piece enemy enter';
           p.textContent = '♟';
