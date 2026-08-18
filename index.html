@@ -292,10 +292,6 @@
     display: inline-block;
     border-radius: 4px;
   }
-  .stamp h2.time-up {
-    border-color: var(--accent);
-    color: #f4d9ae;
-  }
   .stamp .final-score {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 15px;
@@ -446,13 +442,6 @@
     font-weight: 700;
   }
   .title-rules strong { font-weight: 700; }
-  .rule-time-up {
-    font-family: 'Fraunces', serif;
-    font-style: italic;
-    font-weight: 700;
-    font-size: 11px;
-    color: var(--accent);
-  }
 
   #startBtn {
     font-family: 'Work Sans', sans-serif;
@@ -525,7 +514,7 @@
     </div>
 
     <ul class="title-rules">
-      <li>제한시간 <strong>3분</strong> — 시간 종료 시 생존 성공(<span class="rule-time-up">TIME UP</span>)</li>
+      <li>제한시간 <strong>3분</strong> — 점수 상한을 위한 제한이며, 시간이 다 되어도 게임 오버입니다</li>
       <li>포획 성공 시 <strong>+10점</strong>, 최고 점수는 자동 저장됩니다</li>
       <li>시작 후 <strong>4턴</strong> 동안은 막히지 않도록 보호됩니다</li>
     </ul>
@@ -715,6 +704,9 @@
     updateTimerDisplay();
   }
 
+  // reason ('blocked' vs 'time') only distinguishes why the run ended - the
+  // time limit is a scoring cap, not a win condition, so both endings are
+  // shown identically as a game over.
   function endGame(reason) {
     gameOver = true;
     clearInterval(timerHandle);
@@ -722,8 +714,7 @@
       best = score;
       localStorage.setItem(BEST_KEY, String(best));
     }
-    stampTitleEl.textContent = reason === 'time' ? 'TIME UP' : 'GAME OVER';
-    stampTitleEl.classList.toggle('time-up', reason === 'time');
+    stampTitleEl.textContent = 'GAME OVER';
   }
 
   function legal() {
