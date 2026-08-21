@@ -654,6 +654,19 @@
     if (playerCol > 0) options.push(playerCol - 1);
     if (playerCol < COLS - 1) options.push(playerCol + 1);
     const pick = options[Math.floor(Math.random() * options.length)];
+    // Granting the escape must not push the row past its designed 1-3 enemy
+    // cap (see genRowPattern) - if it's already full, free up room by
+    // clearing a different enemy in the row instead of just adding a 4th.
+    const filled = grid[FRONT_ROW].reduce((n, v) => n + (v ? 1 : 0), 0);
+    if (filled >= 3) {
+      const removable = [];
+      for (let c = 0; c < COLS; c++) {
+        if (c !== playerCol && c !== pick && grid[FRONT_ROW][c]) removable.push(c);
+      }
+      if (removable.length) {
+        grid[FRONT_ROW][removable[Math.floor(Math.random() * removable.length)]] = false;
+      }
+    }
     grid[FRONT_ROW][pick] = true;
   }
 
