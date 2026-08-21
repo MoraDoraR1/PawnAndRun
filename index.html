@@ -75,6 +75,7 @@
   }
 
   .plaque {
+    position: relative;
     text-align: center;
     display: flex;
     flex-direction: column;
@@ -309,6 +310,7 @@
     color: var(--accent-ink);
     cursor: pointer;
   }
+  .stamp button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
   .title-screen {
     position: fixed;
@@ -464,8 +466,81 @@
     color: var(--muted);
   }
 
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .icon-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: var(--surface);
+    color: var(--muted);
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+  }
+  .icon-btn svg { width: 16px; height: 16px; display: block; }
+  .icon-btn:hover { color: var(--ink); }
+  .icon-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  @keyframes valueBump {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+  .readout .value.bump { animation: valueBump 0.22s ease; }
+
+  @keyframes bestGlow {
+    0%, 100% { box-shadow: var(--shadow); }
+    50% { box-shadow: var(--shadow), 0 0 0 3px var(--accent); }
+  }
+  .readout.new-best { animation: bestGlow 0.85s ease 2; }
+
+  .score-popup {
+    position: absolute;
+    pointer-events: none;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--accent);
+    z-index: 6;
+    transform: translate(-50%, 0);
+    animation: popupFloat 0.6s ease-out forwards;
+  }
+  @keyframes popupFloat {
+    0% { transform: translate(-50%, 0); opacity: 0; }
+    15% { opacity: 1; }
+    100% { transform: translate(-50%, -28px); opacity: 0; }
+  }
+
+  @keyframes boardShake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-4px); }
+    40% { transform: translateX(4px); }
+    60% { transform: translateX(-3px); }
+    80% { transform: translateX(3px); }
+  }
+  .board-frame.shake { animation: boardShake 0.28s ease; }
+
   @media (prefers-reduced-motion: reduce) {
-    .piece, button.action, .overlay, .stamp, .cell.zone::after, .readout.low-time .value, #startBtn { transition: none !important; animation: none !important; }
+    .piece, button.action, .overlay, .stamp, .cell.zone::after, .readout.low-time .value, #startBtn,
+    .value.bump, .readout.new-best, .score-popup, .board-frame.shake { transition: none !important; animation: none !important; }
   }
 </style>
 </head>
@@ -525,9 +600,13 @@
 </div>
 <div class="table">
   <div class="plaque">
+    <button id="muteBtn" class="icon-btn" type="button" aria-pressed="false" aria-label="소리 끄기">
+      <span id="muteIconWrap"></span>
+    </button>
     <h1>Pawn&amp;Run <span class="title-name-kr">| 폰앤런</span></h1>
     <div class="tagline">막히기 전까지, 끝까지 달려라</div>
   </div>
+  <div id="srStatus" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
 
   <div class="status-row">
     <div class="readout">
@@ -597,8 +676,13 @@
   const restartBtn = document.getElementById('restartBtn');
   const titleScreenEl = document.getElementById('titleScreen');
   const startBtn = document.getElementById('startBtn');
+  const boardFrameEl = document.querySelector('.board-frame');
+  const muteBtn = document.getElementById('muteBtn');
+  const muteIconWrap = document.getElementById('muteIconWrap');
+  const srStatusEl = document.getElementById('srStatus');
 
   const BEST_KEY = 'pawnrun_best_score';
+  const MUTE_KEY = 'pawnrun_muted';
   const GRACE_TURNS = 4;
   const CAPTURE_DELAY_MS = 90;
   const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -607,7 +691,99 @@
     '<path d="M12 3.6a4.4 4.4 0 0 1 2.23 8.18c1.02.58 1.9 1.46 2.6 2.6 1.34 2.2 2.1 5.02 2.27 7.98H4.9c.17-2.96.93-5.78 2.27-7.98.7-1.14 1.58-2.02 2.6-2.6A4.4 4.4 0 0 1 12 3.6Z"/>' +
     '<rect x="4.4" y="23.2" width="15.2" height="3.4" rx="1.5"/></svg>';
 
+  const SPEAKER_ON_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor" stroke="none"/>' +
+    '<path d="M16.2 8.8a5 5 0 0 1 0 6.4"/>' +
+    '<path d="M18.6 6.4a8.5 8.5 0 0 1 0 11.2"/></svg>';
+  const SPEAKER_OFF_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor" stroke="none"/>' +
+    '<path d="M16 9l6 6"/><path d="M22 9l-6 6"/></svg>';
+
+  // Lazily created on first user gesture so the browser's autoplay policy
+  // doesn't silently drop it.
+  let audioCtx = null;
+  let masterGain = null;
+  let muted = localStorage.getItem(MUTE_KEY) === '1';
+
+  function ensureAudio() {
+    if (audioCtx) { if (audioCtx.state === 'suspended') audioCtx.resume(); return; }
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    audioCtx = new Ctx();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = muted ? 0 : 1;
+    masterGain.connect(audioCtx.destination);
+  }
+
+  function tone(freq, dur, type, gain, delay) {
+    if (!audioCtx) return;
+    const t0 = audioCtx.currentTime + (delay || 0);
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(gain, t0 + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(g);
+    g.connect(masterGain);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.02);
+  }
+
+  const sfx = {
+    move() { tone(520, 0.05, 'sine', 0.08); },
+    capture() { tone(720, 0.05, 'square', 0.07); tone(1080, 0.07, 'square', 0.06, 0.05); },
+    blocked() { tone(150, 0.09, 'sawtooth', 0.06); },
+    tick() { tone(880, 0.03, 'sine', 0.05); },
+    start() { tone(660, 0.06, 'sine', 0.07); tone(880, 0.08, 'sine', 0.07, 0.07); },
+    gameOver() { tone(400, 0.18, 'sine', 0.08); tone(260, 0.22, 'sine', 0.07, 0.12); },
+    newBest() { tone(660, 0.08, 'triangle', 0.08); tone(880, 0.08, 'triangle', 0.08, 0.08); tone(1100, 0.12, 'triangle', 0.08, 0.16); },
+  };
+
+  function setMuted(v) {
+    muted = v;
+    localStorage.setItem(MUTE_KEY, v ? '1' : '0');
+    if (masterGain) masterGain.gain.value = v ? 0 : 1;
+    muteBtn.setAttribute('aria-pressed', String(v));
+    muteBtn.setAttribute('aria-label', v ? '소리 켜기' : '소리 끄기');
+    muteIconWrap.innerHTML = v ? SPEAKER_OFF_SVG : SPEAKER_ON_SVG;
+  }
+
+  function bumpValue(el) {
+    if (REDUCED_MOTION) return;
+    el.classList.remove('bump');
+    void el.offsetWidth; // restart the animation
+    el.classList.add('bump');
+  }
+
+  function shakeBoard() {
+    if (REDUCED_MOTION) return;
+    boardFrameEl.classList.remove('shake');
+    void boardFrameEl.offsetWidth;
+    boardFrameEl.classList.add('shake');
+  }
+
+  // Anchored to board-frame (not board) so it survives render()'s
+  // boardEl.innerHTML wipe and can float independently of the next redraw.
+  function showScorePopup(col) {
+    if (REDUCED_MOTION) return;
+    const idx = (TOP_ROW - FRONT_ROW) * COLS + col;
+    const cellEl = boardEl.children[idx];
+    if (!cellEl) return;
+    const cellRect = cellEl.getBoundingClientRect();
+    const frameRect = boardFrameEl.getBoundingClientRect();
+    const popup = document.createElement('span');
+    popup.className = 'score-popup';
+    popup.textContent = '+10';
+    popup.style.left = (cellRect.left - frameRect.left + cellRect.width / 2) + 'px';
+    popup.style.top = (cellRect.top - frameRect.top) + 'px';
+    boardFrameEl.appendChild(popup);
+    setTimeout(() => popup.remove(), 650);
+  }
+
   let playerCol, grid, score, turn, gameOver, best, timeLeft, timerHandle, started, isAnimating;
+  let lastScoreShown, lastTurnShown, overlayWasShown;
 
   function levelOf(s) {
     return Math.min(6, Math.floor(s / 20));
@@ -679,6 +855,9 @@
     isAnimating = false;
     timeLeft = TIME_LIMIT;
     best = Number(localStorage.getItem(BEST_KEY) || 0);
+    lastScoreShown = null;
+    lastTurnShown = null;
+    overlayWasShown = false;
     grid = new Array(TOP_ROW + 1);
     grid[PLAYER_ROW] = new Array(COLS).fill(false);
     for (let r = FRONT_ROW; r <= TOP_ROW; r++) grid[r] = genRowPattern(0);
@@ -714,6 +893,7 @@
       render();
       return;
     }
+    if (timeLeft <= 10) sfx.tick();
     updateTimerDisplay();
   }
 
@@ -723,11 +903,26 @@
   function endGame(reason) {
     gameOver = true;
     clearInterval(timerHandle);
+    let newBest = false;
     if (score > best) {
       best = score;
       localStorage.setItem(BEST_KEY, String(best));
+      newBest = true;
     }
     stampTitleEl.textContent = 'GAME OVER';
+
+    if (newBest) {
+      sfx.newBest();
+      const bestBox = bestEl.closest('.readout');
+      if (!REDUCED_MOTION) {
+        bestBox.classList.remove('new-best');
+        void bestBox.offsetWidth;
+        bestBox.classList.add('new-best');
+      }
+    } else {
+      sfx.gameOver();
+    }
+    srStatusEl.textContent = '게임 오버. 최종 점수 ' + score + '점.' + (newBest ? ' 새로운 최고 점수!' : '');
   }
 
   function legal() {
@@ -747,15 +942,26 @@
   function act(action) {
     if (!started || gameOver || isAnimating) return;
     const L = legal();
-    if (action === 'forward' && !L.canForward) return;
-    if (action === 'left' && !L.canLeft) return;
-    if (action === 'right' && !L.canRight) return;
+    const illegal = (action === 'forward' && !L.canForward) ||
+      (action === 'left' && !L.canLeft) ||
+      (action === 'right' && !L.canRight);
+    if (illegal) {
+      ensureAudio();
+      sfx.blocked();
+      shakeBoard();
+      return;
+    }
+    ensureAudio();
 
     if (action !== 'forward' && !REDUCED_MOTION) {
-      flashCapture(action === 'left' ? playerCol - 1 : playerCol + 1);
+      const targetCol = action === 'left' ? playerCol - 1 : playerCol + 1;
+      flashCapture(targetCol);
+      sfx.capture();
+      showScorePopup(targetCol);
       isAnimating = true;
       setTimeout(() => { isAnimating = false; resolveAction(action); }, CAPTURE_DELAY_MS);
     } else {
+      if (action === 'forward') sfx.move(); else sfx.capture();
       resolveAction(action);
     }
   }
@@ -791,6 +997,14 @@
   }
 
   function render() {
+    if (score !== lastScoreShown) {
+      if (lastScoreShown !== null) bumpValue(scoreEl);
+      lastScoreShown = score;
+    }
+    if (turn !== lastTurnShown) {
+      if (lastTurnShown !== null) bumpValue(turnEl);
+      lastTurnShown = turn;
+    }
     scoreEl.textContent = score;
     bestEl.textContent = best;
     turnEl.textContent = turn;
@@ -841,18 +1055,38 @@
     if (gameOver) {
       finalScoreEl.textContent = score;
       overlayEl.classList.add('show');
+      // Only move focus the moment the overlay actually appears, not on
+      // every re-render while it's already showing.
+      if (!overlayWasShown) {
+        overlayWasShown = true;
+        restartBtn.focus();
+      }
     }
   }
 
   function dismissTitle() {
+    ensureAudio();
+    sfx.start();
     titleScreenEl.classList.add('hidden');
     beginRun();
+    btnForward.focus();
   }
 
   function restart() {
+    ensureAudio();
+    sfx.start();
     setupBoard();
     beginRun();
   }
+
+  muteIconWrap.innerHTML = muted ? SPEAKER_OFF_SVG : SPEAKER_ON_SVG;
+  muteBtn.setAttribute('aria-pressed', String(muted));
+  muteBtn.setAttribute('aria-label', muted ? '소리 켜기' : '소리 끄기');
+  muteBtn.addEventListener('click', () => {
+    ensureAudio();
+    setMuted(!muted);
+    if (!muted) sfx.move();
+  });
 
   btnLeft.addEventListener('click', () => act('left'));
   btnForward.addEventListener('click', () => act('forward'));
