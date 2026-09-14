@@ -1,13 +1,13 @@
 # Pawn&Run | 폰앤런
 
-폰이 앞에서 밀려오는 적을 포획하며 최대한 오래 버티는 미니 로그라이크. 지금부터 Unity(6000.0 LTS, 2D, 내장 렌더 파이프라인)로 정식 개발합니다.
+폰이 앞에서 밀려오는 적을 포획하며 최대한 오래 버티는 미니 로그라이크. 지금부터 Unity(6.3 LTS / 6000.3.19f1, 2D, 내장 렌더 파이프라인)로 정식 개발합니다.
 
 웹 프로토타입(HTML/CSS/JS 단일 파일)은 `web-prototype/`에 참고용으로 남겨뒀습니다. 게임 규칙과 밸런스를 그대로 옮겨오는 기준점으로 쓰세요.
 
 ## 시작하기 (Unity Hub)
 
 1. Unity Hub에서 **Add project from disk** → 이 저장소 루트 폴더 선택
-2. 설치된 에디터 버전이 `ProjectSettings/ProjectVersion.txt`에 적힌 `6000.0.35f1`과 다르면 Hub가 업그레이드 여부를 물어봅니다 → 예로 진행 (부 버전 차이는 무해합니다)
+2. 설치된 에디터 버전이 `ProjectSettings/ProjectVersion.txt`에 적힌 `6000.3.19f1`과 다르면 Hub가 업그레이드 여부를 물어봅니다 → 예로 진행 (부 버전 차이는 무해합니다)
 3. 처음 열 때 `ProjectSettings/`의 나머지 설정 파일과 `Assets/Scenes`의 씬은 비어 있으므로, `Assets/Scenes`에 새 씬을 만들어 저장해주세요 (예: `MainScene.unity`)
 4. Git LFS를 쓰려면 (권장 — 스프라이트/오디오 등 바이너리 에셋 추가 전) 로컬에서 한 번만: `git lfs install`
 
