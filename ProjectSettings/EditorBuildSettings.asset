@@ -4,6 +4,18 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/SplashScene.unity
+    guid: aacad62e56d808740b7535fab2394cb2
+  - enabled: 1
+    path: Assets/Scenes/MainScene.unity
+    guid: e90c0917710fdaf4d8c2f43cb0761e67
+  - enabled: 1
+    path: Assets/Scenes/RankingScene.unity
+    guid: 14b108f50e4f6364182d7e1f52ab7c80
+  - enabled: 1
+    path: Assets/Scenes/GameScene.unity
+    guid: e8d3ff53e9cdf6b46b2a9018dea43b50
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

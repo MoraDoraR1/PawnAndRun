@@ -69,3 +69,10 @@ crashlytics-build.properties
 # OS-specific
 .DS_Store
 Thumbs.db
+
+# Windows system fonts copied in locally for Korean text support (Microsoft license
+# restricts redistribution) - re-copy from C:\Windows\Fonts if you need them locally.
+/[Aa]ssets/[Ff]onts/MalgunGothic-Regular.ttf
+/[Aa]ssets/[Ff]onts/MalgunGothic-Regular.ttf.meta
+/[Aa]ssets/[Ff]onts/MalgunGothic-Bold.ttf
+/[Aa]ssets/[Ff]onts/MalgunGothic-Bold.ttf.meta
