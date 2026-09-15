@@ -20,9 +20,12 @@ namespace PawnAndRun.Game
         private static readonly Color PlayerColor = new Color(0.96f, 0.94f, 0.89f); // cream/white silhouette
         private static readonly Color EnemyColor = new Color(0.13f, 0.10f, 0.07f);  // near-black silhouette
         private static readonly Color PopupColor = new Color(0.71f, 0.47f, 0.18f);
+        private static readonly Color BlockedZoneColor = new Color(0.86f, 0.22f, 0.18f, 0.55f);
+        private static readonly Color CaptureZoneColor = new Color(0.93f, 0.67f, 0.24f, 0.45f);
 
         [Header("Board")]
         [SerializeField] private Image[] cellPieces; // 35 entries, index = (TopRow-row)*Cols+col
+        [SerializeField] private Image[] frontZoneOverlays; // 5 entries, index = col, front-row (just ahead of player) only
         [SerializeField] private RectTransform boardFrameRect;
         [SerializeField] private RectTransform fxLayer;
 
@@ -40,6 +43,7 @@ namespace PawnAndRun.Game
 
         [Header("Game over")]
         [SerializeField] private GameObject gameOverOverlay;
+        [SerializeField] private TMP_Text reasonText;
         [SerializeField] private TMP_Text finalScoreText;
         [SerializeField] private Button restartButton;
 
@@ -89,6 +93,7 @@ namespace PawnAndRun.Game
             _isAnimating = false;
             _model.Setup(PlayerPrefs.GetInt(BestScoreKey, 0));
             RenderBoard();
+            UpdateZoneHighlight();
             UpdateStatTexts();
             UpdateButtonStates();
 
@@ -138,10 +143,11 @@ namespace PawnAndRun.Game
             if (!_model.TryAct(action)) return;
 
             RenderBoard();
+            UpdateZoneHighlight();
             UpdateStatTexts();
             UpdateButtonStates();
 
-            if (_model.IsGameOver) EndGame();
+            if (_model.IsGameOver) EndGame(timedOut: false);
         }
 
         private IEnumerator TimerLoop()
@@ -156,14 +162,14 @@ namespace PawnAndRun.Game
                 UpdateTimerText();
                 if (timeUp)
                 {
-                    EndGame();
+                    EndGame(timedOut: true);
                     yield break;
                 }
                 if (_model.TimeLeft <= 10) sfxPlayer?.Tick();
             }
         }
 
-        private void EndGame()
+        private void EndGame(bool timedOut)
         {
             bool newBest = _model.Score > PlayerPrefs.GetInt(BestScoreKey, 0);
             if (newBest)
@@ -174,6 +180,7 @@ namespace PawnAndRun.Game
             UpdateStatTexts();
             UpdateButtonStates();
             if (finalScoreText != null) finalScoreText.text = _model.Score.ToString();
+            if (reasonText != null) reasonText.text = timedOut ? "시간 종료!" : "전진 불가!";
             if (gameOverOverlay != null) gameOverOverlay.SetActive(true);
 
             if (sfxPlayer != null)
@@ -239,6 +246,57 @@ namespace PawnAndRun.Game
                     {
                         img.enabled = false;
                     }
+                }
+            }
+        }
+
+        // Highlights the front-row cells (the row directly ahead of the player) so a move's
+        // consequence is visible before it's taken, and - since nothing re-renders after
+        // game over - doubles as the "why did I die" indicator: the blocked front cell and
+        // any diagonal with no escape stay lit in red on the final frame.
+        private void UpdateZoneHighlight()
+        {
+            if (frontZoneOverlays == null) return;
+            var l = _model.GetLegalMoves();
+
+            for (int col = 0; col < GameBoardModel.Cols; col++)
+            {
+                var overlay = frontZoneOverlays[col];
+                if (overlay == null) continue;
+
+                if (col == _model.PlayerCol)
+                {
+                    if (l.Front)
+                    {
+                        overlay.enabled = true;
+                        overlay.color = BlockedZoneColor;
+                    }
+                    else
+                    {
+                        overlay.enabled = false;
+                    }
+                }
+                else if (col == _model.PlayerCol - 1 || col == _model.PlayerCol + 1)
+                {
+                    bool hasEnemy = _model.HasEnemyAt(GameBoardModel.FrontRow, col);
+                    if (hasEnemy)
+                    {
+                        overlay.enabled = true;
+                        overlay.color = CaptureZoneColor;
+                    }
+                    else if (_model.IsGameOver && l.Over)
+                    {
+                        overlay.enabled = true;
+                        overlay.color = BlockedZoneColor;
+                    }
+                    else
+                    {
+                        overlay.enabled = false;
+                    }
+                }
+                else
+                {
+                    overlay.enabled = false;
                 }
             }
         }

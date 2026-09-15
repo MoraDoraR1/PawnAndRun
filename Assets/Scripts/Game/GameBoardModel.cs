@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace PawnAndRun.Game
@@ -93,9 +92,12 @@ namespace PawnAndRun.Game
             return taken;
         }
 
-        // If the front is blocked with no diagonal escape, grant one instead of silently
-        // deleting the blocker - the player is never left with zero legal moves.
-        // Mirrors web-prototype ensureSafeFront().
+        // If the front is blocked with no diagonal escape during the opening grace window,
+        // just clear the blocker so the forward path happens to be open - the player is
+        // never left with zero legal moves. Earlier this granted the escape by placing a
+        // *new* capturable enemy on an empty diagonal instead, but that read as an enemy
+        // materializing out of nowhere right as a new player was deciding between lanes;
+        // clearing the front cell instead looks like ordinary row variance.
         private void EnsureSafeFront()
         {
             if (!_grid[FrontRow][PlayerCol]) return;
@@ -103,26 +105,7 @@ namespace PawnAndRun.Game
             bool canRight = PlayerCol < Cols - 1 && _grid[FrontRow][PlayerCol + 1];
             if (canLeft || canRight) return;
 
-            var options = new List<int>();
-            if (PlayerCol > 0) options.Add(PlayerCol - 1);
-            if (PlayerCol < Cols - 1) options.Add(PlayerCol + 1);
-            int pick = options[_rng.Next(options.Count)];
-
-            int filled = 0;
-            for (int c = 0; c < Cols; c++) if (_grid[FrontRow][c]) filled++;
-            if (filled >= 3)
-            {
-                var removable = new List<int>();
-                for (int c = 0; c < Cols; c++)
-                {
-                    if (c != PlayerCol && c != pick && _grid[FrontRow][c]) removable.Add(c);
-                }
-                if (removable.Count > 0)
-                {
-                    _grid[FrontRow][removable[_rng.Next(removable.Count)]] = false;
-                }
-            }
-            _grid[FrontRow][pick] = true;
+            _grid[FrontRow][PlayerCol] = false;
         }
 
         public LegalMoves GetLegalMoves()
