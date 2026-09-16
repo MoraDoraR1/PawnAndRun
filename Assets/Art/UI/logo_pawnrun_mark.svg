@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+<defs><mask id="m"><rect width="512" height="512" fill="white"/><g fill="black">
+  <circle cx="256" cy="134.28" r="26.84"/>
+  <path d="M218.18 168.44 Q256 151.36 293.82 168.44 L286.5 190.39999999999998 H225.5 Z"/>
+  <path d="M230.38 191.62 Q234.04 234.32 202.32 256.28 H309.68 Q277.96 234.32 281.62 191.62 Z"/>
+  <rect x="196.22" y="256.28" width="119.56" height="17.08" rx="6.1"/>
+  <path d="M185.24 274.58 H326.76 L336.52 296.53999999999996 H175.48000000000002 Z"/></g></mask></defs><text x="256" y="356" text-anchor="middle" font-family="Arial Black, sans-serif" font-size="390" font-weight="900" fill="#B5772E" mask="url(#m)">&amp;</text>
+  <g fill="#FFFAF0">
+  <circle cx="256" cy="134.28" r="26.84"/>
+  <path d="M218.18 168.44 Q256 151.36 293.82 168.44 L286.5 190.39999999999998 H225.5 Z"/>
+  <path d="M230.38 191.62 Q234.04 234.32 202.32 256.28 H309.68 Q277.96 234.32 281.62 191.62 Z"/>
+  <rect x="196.22" y="256.28" width="119.56" height="17.08" rx="6.1"/>
+  <path d="M185.24 274.58 H326.76 L336.52 296.53999999999996 H175.48000000000002 Z"/></g>
+  <g transform="translate(76 348)"><path d="M0 62h105l47-32H47z" fill="#3A2F22"/><path d="M106 62h105l47-32H153z" fill="#B5772E"/><path d="M212 62h105l47-32H259z" fill="#3A2F22"/></g></svg>

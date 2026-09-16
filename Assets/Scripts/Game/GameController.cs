@@ -17,8 +17,6 @@ namespace PawnAndRun.Game
         private const string BestScoreKey = "pawnrun_best_score";
         private const float CaptureDelaySeconds = 0.12f; // mirrors web-prototype CAPTURE_DELAY_MS
 
-        private static readonly Color PlayerColor = new Color(0.96f, 0.94f, 0.89f); // cream/white silhouette
-        private static readonly Color EnemyColor = new Color(0.13f, 0.10f, 0.07f);  // near-black silhouette
         private static readonly Color PopupColor = new Color(0.71f, 0.47f, 0.18f);
         private static readonly Color BlockedZoneColor = new Color(0.86f, 0.22f, 0.18f, 0.55f);
         private static readonly Color CaptureZoneColor = new Color(0.93f, 0.67f, 0.24f, 0.45f);
@@ -28,6 +26,8 @@ namespace PawnAndRun.Game
         [SerializeField] private Image[] frontZoneOverlays; // 5 entries, index = col, front-row (just ahead of player) only
         [SerializeField] private RectTransform boardFrameRect;
         [SerializeField] private RectTransform fxLayer;
+        [SerializeField] private Sprite playerPawnSprite;
+        [SerializeField] private Sprite enemyPawnSprite;
 
         [Header("Stat bar")]
         [SerializeField] private TMP_Text scoreValueText;
@@ -40,6 +40,14 @@ namespace PawnAndRun.Game
         [SerializeField] private Button rightButton;
         [SerializeField] private Button exitButton;
         [SerializeField] private Button gearButton;
+
+        [Header("Control art (per-direction normal/disabled state sprites)")]
+        [SerializeField] private Sprite forwardNormalSprite;
+        [SerializeField] private Sprite forwardDisabledSprite;
+        [SerializeField] private Sprite leftNormalSprite;
+        [SerializeField] private Sprite leftDisabledSprite;
+        [SerializeField] private Sprite rightNormalSprite;
+        [SerializeField] private Sprite rightDisabledSprite;
 
         [Header("Game over")]
         [SerializeField] private GameObject gameOverOverlay;
@@ -197,9 +205,31 @@ namespace PawnAndRun.Game
         {
             var l = _model.GetLegalMoves();
             bool over = _model.IsGameOver;
-            if (forwardButton != null) forwardButton.interactable = !over && l.CanForward;
-            if (leftButton != null) leftButton.interactable = !over && l.CanLeft;
-            if (rightButton != null) rightButton.interactable = !over && l.CanRight;
+            bool canForward = !over && l.CanForward;
+            bool canLeft = !over && l.CanLeft;
+            bool canRight = !over && l.CanRight;
+
+            if (forwardButton != null)
+            {
+                forwardButton.interactable = canForward;
+                SetButtonSprite(forwardButton, canForward ? forwardNormalSprite : forwardDisabledSprite);
+            }
+            if (leftButton != null)
+            {
+                leftButton.interactable = canLeft;
+                SetButtonSprite(leftButton, canLeft ? leftNormalSprite : leftDisabledSprite);
+            }
+            if (rightButton != null)
+            {
+                rightButton.interactable = canRight;
+                SetButtonSprite(rightButton, canRight ? rightNormalSprite : rightDisabledSprite);
+            }
+        }
+
+        private static void SetButtonSprite(Button button, Sprite sprite)
+        {
+            if (sprite == null) return;
+            if (button.targetGraphic is Image img) img.sprite = sprite;
         }
 
         private void UpdateStatTexts()
@@ -235,12 +265,14 @@ namespace PawnAndRun.Game
                     if (row == GameBoardModel.PlayerRow && col == _model.PlayerCol)
                     {
                         img.enabled = true;
-                        img.color = PlayerColor;
+                        img.color = Color.white;
+                        if (playerPawnSprite != null) img.sprite = playerPawnSprite;
                     }
                     else if (row != GameBoardModel.PlayerRow && _model.HasEnemyAt(row, col))
                     {
                         img.enabled = true;
-                        img.color = EnemyColor;
+                        img.color = Color.white;
+                        if (enemyPawnSprite != null) img.sprite = enemyPawnSprite;
                     }
                     else
                     {
