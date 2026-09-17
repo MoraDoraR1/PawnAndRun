@@ -18,8 +18,8 @@ namespace PawnAndRun.Game
         private const float CaptureDelaySeconds = 0.12f; // mirrors web-prototype CAPTURE_DELAY_MS
 
         private static readonly Color PopupColor = new Color(0.71f, 0.47f, 0.18f);
-        private static readonly Color BlockedZoneColor = new Color(0.86f, 0.22f, 0.18f, 0.55f);
-        private static readonly Color CaptureZoneColor = new Color(0.93f, 0.67f, 0.24f, 0.45f);
+        private static readonly Color BlockedZoneColor = new Color(0.557f, 0.278f, 0.180f, 0.55f);
+        private static readonly Color CaptureZoneColor = new Color(0.847f, 0.678f, 0.408f, 0.45f);
 
         [Header("Board")]
         [SerializeField] private Image[] cellPieces; // 35 entries, index = (TopRow-row)*Cols+col
