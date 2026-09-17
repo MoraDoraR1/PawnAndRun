@@ -28,6 +28,7 @@ namespace PawnAndRun.Game
         [SerializeField] private RectTransform fxLayer;
         [SerializeField] private Sprite playerPawnSprite;
         [SerializeField] private Sprite enemyPawnSprite;
+        [SerializeField] private Sprite[] enemyPieceVariants; // optional cosmetic variety (pawn/knight/rook/bishop); falls back to enemyPawnSprite
 
         [Header("Stat bar")]
         [SerializeField] private TMP_Text scoreValueText;
@@ -272,7 +273,17 @@ namespace PawnAndRun.Game
                     {
                         img.enabled = true;
                         img.color = Color.white;
-                        if (enemyPawnSprite != null) img.sprite = enemyPawnSprite;
+                        if (enemyPieceVariants != null && enemyPieceVariants.Length > 0)
+                        {
+                            // Keyed on column only (not row): enemies shift straight down a fixed
+                            // lane each tick, so this keeps each piece's look stable as it advances
+                            // instead of re-rolling every turn.
+                            img.sprite = enemyPieceVariants[col % enemyPieceVariants.Length];
+                        }
+                        else if (enemyPawnSprite != null)
+                        {
+                            img.sprite = enemyPawnSprite;
+                        }
                     }
                     else
                     {
