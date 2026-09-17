@@ -245,7 +245,7 @@ namespace PawnAndRun.Game
             int m = _model.TimeLeft / 60;
             int s = _model.TimeLeft % 60;
             timerText.text = $"{m:00}:{s:00}";
-            timerText.color = _model.TimeLeft <= 10 ? new Color(0.83f, 0.22f, 0.16f) : Color.white;
+            timerText.color = _model.TimeLeft <= 10 ? new Color(0.83f, 0.22f, 0.16f) : new Color(0.14f, 0.09f, 0.06f);
         }
 
         private static int GetCellIndex(int row, int col) => (GameBoardModel.TopRow - row) * GameBoardModel.Cols + col;
